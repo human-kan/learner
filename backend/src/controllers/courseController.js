@@ -1,5 +1,6 @@
 import prisma from '../utils/prisma.js';
 import { generateCourse } from '../services/aiService.js';
+import { generateMockCourse } from '../services/mockAiService.js';
 import { searchVideos, parseDuration } from '../services/youtubeService.js';
 
 // Generate a new course from user profile
@@ -16,9 +17,15 @@ export const createCourse = async (req, res) => {
       return res.status(400).json({ error: 'Please complete onboarding first' });
     }
 
-    // Generate course with AI
+    // Generate course with AI (fallback to mock if API fails)
     console.log('🤖 Generating course with AI...');
-    const aiCourse = await generateCourse(profile);
+    let aiCourse;
+    try {
+      aiCourse = await generateCourse(profile);
+    } catch (aiError) {
+      console.log('⚠️ OpenAI API failed, using mock course generator');
+      aiCourse = generateMockCourse(profile);
+    }
 
     // Create course in database
     const course = await prisma.course.create({
