@@ -1,0 +1,133 @@
+// Prisma schema for AI Learning Hub
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User authentication
+model User {
+  id            String        @id @default(uuid())
+  email         String        @unique
+  passwordHash  String        @map("password_hash")
+  name          String?
+  createdAt     DateTime      @default(now()) @map("created_at")
+  lastLogin     DateTime?     @map("last_login")
+  
+  profile       UserProfile?
+  courses       Course[]
+  progress      Progress[]
+  stats         UserStats?
+  
+  @@map("users")
+}
+
+// Onboarding data
+model UserProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique @map("user_id")
+  goal            String
+  timeframeWeeks  Int      @map("timeframe_weeks")
+  weeklyHours     Int      @map("weekly_hours")
+  skillLevel      String   @map("skill_level") // 'beginner', 'intermediate', 'advanced'
+  learningStyle   String   @map("learning_style") // 'visual', 'text', 'practical', 'mixed'
+  endObjective    String   @map("end_objective")
+  priorKnowledge  String?  @map("prior_knowledge")
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_profiles")
+}
+
+// AI-generated courses
+model Course {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  title           String
+  description     String?
+  totalModules    Int      @map("total_modules")
+  estimatedWeeks  Int      @map("estimated_weeks")
+  status          String   @default("active") // 'active', 'completed', 'paused'
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  modules Module[]
+  
+  @@map("courses")
+}
+
+// Course modules
+model Module {
+  id              String   @id @default(uuid())
+  courseId        String   @map("course_id")
+  orderIndex      Int      @map("order_index")
+  title           String
+  description     String?
+  weekNumber      Int?     @map("week_number")
+  estimatedHours  Float?   @map("estimated_hours")
+  status          String   @default("locked") // 'locked', 'active', 'completed'
+  xpReward        Int      @default(100) @map("xp_reward")
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  course    Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  resources Resource[]
+  progress  Progress[]
+  
+  @@map("modules")
+}
+
+// Module resources (videos, quizzes, etc.)
+model Resource {
+  id               String   @id @default(uuid())
+  moduleId         String   @map("module_id")
+  type             String   // 'video', 'article', 'quiz'
+  title            String
+  youtubeVideoId   String?  @map("youtube_video_id")
+  durationSeconds  Int?     @map("duration_seconds")
+  url              String?
+  orderIndex       Int      @map("order_index")
+  createdAt        DateTime @default(now()) @map("created_at")
+  
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  
+  @@map("resources")
+}
+
+// User progress tracking
+model Progress {
+  id               String    @id @default(uuid())
+  userId           String    @map("user_id")
+  moduleId         String    @map("module_id")
+  completed        Boolean   @default(false)
+  completedAt      DateTime? @map("completed_at")
+  timeSpentMinutes Int       @default(0) @map("time_spent_minutes")
+  xpEarned         Int       @default(0) @map("xp_earned")
+  notes            String?
+  
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, moduleId])
+  @@map("progress")
+}
+
+// Gamification stats
+model UserStats {
+  id                String   @id @default(uuid())
+  userId            String   @unique @map("user_id")
+  totalXp           Int      @default(0) @map("total_xp")
+  level             Int      @default(1)
+  streakDays        Int      @default(0) @map("streak_days")
+  lastActivityDate  DateTime? @map("last_activity_date")
+  modulesCompleted  Int      @default(0) @map("modules_completed")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_stats")
+}
