@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AuthCallback from './pages/AuthCallback';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import Course from './pages/Course';
@@ -66,6 +67,9 @@ function App() {
               </PublicRoute>
             }
           />
+
+          {/* OAuth callback route (no auth required) */}
+          <Route path="/auth/callback" element={<AuthCallback />} />
 
           {/* Protected routes */}
           <Route

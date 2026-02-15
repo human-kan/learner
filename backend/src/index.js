@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
+import supabaseAuthRoutes from './routes/supabaseAuth.js';
 import onboardingRoutes from './routes/onboarding.js';
 import courseRoutes from './routes/courses.js';
 import progressRoutes from './routes/progress.js';
@@ -26,7 +27,8 @@ app.get('/health', (req, res) => {
 });
 
 // Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes); // Legacy JWT auth (kept for backward compatibility)
+app.use('/api/supabase-auth', supabaseAuthRoutes); // New Supabase auth with Google OAuth
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/progress', progressRoutes);

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { register } from '../services/api';
+import { registerWithEmail } from '../services/supabaseApi';
 import { useAuth } from '../context/AuthContext';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -18,7 +19,8 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await register({ name, email, password });
+      const res = await registerWithEmail({ name, email, password });
+      localStorage.setItem('supabase_token', res.data.token);
       loginUser(res.data.user, res.data.token);
       navigate('/onboarding');
     } catch (err) {
@@ -39,6 +41,17 @@ export default function Register() {
             {error}
           </div>
         )}
+
+        <GoogleLoginButton />
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-800"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-card text-text-secondary">Or sign up with email</span>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
